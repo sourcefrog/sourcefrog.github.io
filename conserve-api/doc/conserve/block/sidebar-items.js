@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["BlockDir","A readable, writable directory within a band holding data blocks."],["BlockWriter","Write body data to a data block, compressed, and stored by its hash."]],"type":[["BlockHash","The unique identifier for a block: its hexadecimal BLAKE2b hash."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Report","A Report is notified of problems or non-problematic events that occur while Conserve is running."]]});
