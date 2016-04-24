@@ -260,6 +260,57 @@
 <span id="216">216</span>
 <span id="217">217</span>
 <span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
 </pre><pre class='rust '>
 <span class='comment'>// Conserve backup system.</span>
 <span class='comment'>// Copyright 2015, 2016 Martin Pool.</span>
@@ -271,15 +322,17 @@
 
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fs</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>;
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='ident'>ErrorKind</span>, <span class='ident'>Write</span>};
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='ident'>ErrorKind</span>, <span class='ident'>Read</span>, <span class='ident'>Write</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>path</span>::{<span class='ident'>Path</span>, <span class='ident'>PathBuf</span>};
 
+<span class='kw'>use</span> <span class='ident'>blake2_rfc</span>::<span class='ident'>blake2b</span>;
 <span class='kw'>use</span> <span class='ident'>blake2_rfc</span>::<span class='ident'>blake2b</span>::<span class='ident'>Blake2b</span>;
-<span class='kw'>use</span> <span class='ident'>brotli2</span>::<span class='ident'>write</span>::<span class='ident'>BrotliEncoder</span>;
+<span class='kw'>use</span> <span class='ident'>brotli2</span>;
+<span class='kw'>use</span> <span class='ident'>brotli2</span>::<span class='ident'>write</span>::{<span class='ident'>BrotliEncoder</span>};
 <span class='kw'>use</span> <span class='ident'>rustc_serialize</span>::<span class='ident'>hex</span>::<span class='ident'>ToHex</span>;
 
 <span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>io</span>::<span class='ident'>write_file_entire</span>;
-<span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>report</span>::<span class='ident'>Report</span>;
+<span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>report</span>::<span class='ident'>SyncReport</span>;
 
 <span class='doccomment'>/// Use a moderate Brotli compression level.</span>
 <span class='doccomment'>///</span>
@@ -341,35 +394,35 @@
 
 
 <span class='doccomment'>/// A readable, writable directory within a band holding data blocks.</span>
-<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>BlockDir</span> {
+<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
     <span class='kw'>pub</span> <span class='ident'>path</span>: <span class='ident'>PathBuf</span>,
 
     <span class='doccomment'>/// Counters and errors for access to this BlockDir.</span>
-    <span class='kw'>pub</span> <span class='ident'>report</span>: <span class='ident'>Report</span>,
+    <span class='kw'>pub</span> <span class='ident'>report</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>SyncReport</span>,
 }
 
 <span class='kw'>fn</span> <span class='ident'>block_name_to_subdirectory</span>(<span class='ident'>block_hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='kw-2'>&amp;</span><span class='ident'>str</span> {
     <span class='kw-2'>&amp;</span><span class='ident'>block_hash</span>[..<span class='ident'>SUBDIR_NAME_CHARS</span>]
 }
 
-<span class='kw'>impl</span> <span class='ident'>BlockDir</span> {
+<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
     <span class='doccomment'>/// Create a BlockDir accessing `path`, which must exist as a directory.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>path</span>: <span class='kw-2'>&amp;</span><span class='ident'>Path</span>) <span class='op'>-&gt;</span> <span class='ident'>BlockDir</span> {
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>path</span>: <span class='kw-2'>&amp;</span><span class='ident'>Path</span>, <span class='ident'>report</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>SyncReport</span>) <span class='op'>-&gt;</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
         <span class='ident'>BlockDir</span> {
             <span class='ident'>path</span>: <span class='ident'>path</span>.<span class='ident'>to_path_buf</span>(),
-            <span class='ident'>report</span>: <span class='ident'>Report</span>::<span class='ident'>new</span>(),
+            <span class='ident'>report</span>: <span class='ident'>report</span>,
         }
     }
 
     <span class='doccomment'>/// Return the subdirectory in which we&#39;d put a file called `hash_hex`.</span>
-    <span class='kw'>fn</span> <span class='ident'>subdir_for</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockDir</span>, <span class='ident'>hash_hex</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockHash</span>) <span class='op'>-&gt;</span> <span class='ident'>PathBuf</span> {
+    <span class='kw'>fn</span> <span class='ident'>subdir_for</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>, <span class='ident'>hash_hex</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockHash</span>) <span class='op'>-&gt;</span> <span class='ident'>PathBuf</span> {
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>buf</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>path</span>.<span class='ident'>clone</span>();
         <span class='ident'>buf</span>.<span class='ident'>push</span>(<span class='ident'>block_name_to_subdirectory</span>(<span class='ident'>hash_hex</span>));
         <span class='ident'>buf</span>
     }
 
     <span class='doccomment'>/// Return the full path for a file called `hex_hash`.</span>
-    <span class='kw'>fn</span> <span class='ident'>path_for_file</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockDir</span>, <span class='ident'>hash_hex</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockHash</span>) <span class='op'>-&gt;</span> <span class='ident'>PathBuf</span> {
+    <span class='kw'>fn</span> <span class='ident'>path_for_file</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>, <span class='ident'>hash_hex</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockHash</span>) <span class='op'>-&gt;</span> <span class='ident'>PathBuf</span> {
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>buf</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>subdir_for</span>(<span class='ident'>hash_hex</span>);
         <span class='ident'>buf</span>.<span class='ident'>push</span>(<span class='ident'>hash_hex</span>);
         <span class='ident'>buf</span>
@@ -378,8 +431,12 @@
     <span class='doccomment'>/// Finish and store the contents of a BlockWriter.</span>
     <span class='doccomment'>///</span>
     <span class='doccomment'>/// Returns the hex hash of the block.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>store</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockDir</span>, <span class='ident'>bw</span>: <span class='ident'>BlockWriter</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>BlockHash</span><span class='op'>&gt;</span> {
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>store</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>, <span class='ident'>bw</span>: <span class='ident'>BlockWriter</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>BlockHash</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> (<span class='ident'>compressed_bytes</span>, <span class='ident'>hex_hash</span>) <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>bw</span>.<span class='ident'>finish</span>());
+        <span class='kw'>if</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>contains</span>(<span class='kw-2'>&amp;</span><span class='ident'>hex_hash</span>)) {
+            <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.write.already_present&quot;</span>, <span class='number'>1</span>);
+            <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>hex_hash</span>);
+        }
         <span class='kw'>let</span> <span class='ident'>subdir</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>subdir_for</span>(<span class='kw-2'>&amp;</span><span class='ident'>hex_hash</span>);
         <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=</span> <span class='ident'>fs</span>::<span class='ident'>create_dir</span>(<span class='ident'>subdir</span>) {
             <span class='kw'>if</span> <span class='ident'>e</span>.<span class='ident'>kind</span>() <span class='op'>!=</span> <span class='ident'>ErrorKind</span>::<span class='ident'>AlreadyExists</span> {
@@ -388,25 +445,58 @@
         }
         <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=</span> <span class='ident'>write_file_entire</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>path_for_file</span>(<span class='kw-2'>&amp;</span><span class='ident'>hex_hash</span>),
             <span class='ident'>compressed_bytes</span>.<span class='ident'>as_slice</span>()) {
-            <span class='kw'>if</span> <span class='ident'>e</span>.<span class='ident'>kind</span>() <span class='op'>!=</span> <span class='ident'>ErrorKind</span>::<span class='ident'>AlreadyExists</span> {
+            <span class='kw'>if</span> <span class='ident'>e</span>.<span class='ident'>kind</span>() <span class='op'>==</span> <span class='ident'>ErrorKind</span>::<span class='ident'>AlreadyExists</span> {
+                <span class='comment'>// Suprising we saw this rather than detecting it above.</span>
+                <span class='macro'>warn</span><span class='macro'>!</span>(<span class='string'>&quot;Unexpected late detection of existing block {:?}&quot;</span>, <span class='ident'>hex_hash</span>);
+                <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.write.already_present&quot;</span>, <span class='number'>1</span>);
+            } <span class='kw'>else</span> {
                 <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>e</span>);
             }
         }
+        <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.write.count&quot;</span>, <span class='number'>1</span>);
         <span class='prelude-val'>Ok</span>(<span class='ident'>hex_hash</span>)
     }
 
     <span class='doccomment'>/// True if the named block is present in this directory.</span>
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>contains</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockDir</span>, <span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockHash</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>bool</span><span class='op'>&gt;</span> {
-        <span class='kw'>if</span> <span class='kw'>let</span> <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=</span> <span class='ident'>fs</span>::<span class='ident'>metadata</span>(<span class='self'>self</span>.<span class='ident'>path_for_file</span>(<span class='ident'>hash</span>)) {
-            <span class='kw'>if</span> <span class='ident'>e</span>.<span class='ident'>kind</span>() <span class='op'>==</span> <span class='ident'>ErrorKind</span>::<span class='ident'>NotFound</span> {
-                <span class='prelude-val'>Ok</span>(<span class='boolval'>false</span>)
-            } <span class='kw'>else</span> {
-                <span class='prelude-val'>Err</span>(<span class='ident'>e</span>)
-            }
-        } <span class='kw'>else</span> {
-            <span class='prelude-val'>Ok</span>(<span class='boolval'>true</span>)
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>contains</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>, <span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockHash</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>bool</span><span class='op'>&gt;</span> {
+        <span class='kw'>match</span> <span class='ident'>fs</span>::<span class='ident'>metadata</span>(<span class='self'>self</span>.<span class='ident'>path_for_file</span>(<span class='ident'>hash</span>)) {
+            <span class='prelude-val'>Err</span>(<span class='kw-2'>ref</span> <span class='ident'>e</span>) <span class='kw'>if</span> <span class='ident'>e</span>.<span class='ident'>kind</span>() <span class='op'>==</span> <span class='ident'>ErrorKind</span>::<span class='ident'>NotFound</span> <span class='op'>=&gt;</span> <span class='prelude-val'>Ok</span>(<span class='boolval'>false</span>),
+            <span class='prelude-val'>Ok</span>(_) <span class='op'>=&gt;</span> <span class='prelude-val'>Ok</span>(<span class='boolval'>true</span>),
+            <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> <span class='prelude-val'>Err</span>(<span class='ident'>e</span>),
         }
     }
+
+    <span class='doccomment'>/// Read back the contents of a block, as a byte array.</span>
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get</span>(<span class='self'>self</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>, <span class='ident'>hash</span>: <span class='kw-2'>&amp;</span><span class='ident'>BlockHash</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;&gt;</span> {
+        <span class='kw'>let</span> <span class='ident'>path</span> <span class='op'>=</span> <span class='self'>self</span>.<span class='ident'>path_for_file</span>(<span class='ident'>hash</span>);
+        <span class='kw'>let</span> <span class='ident'>decompressed</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>read_and_decompress</span>(<span class='kw-2'>&amp;</span><span class='ident'>path</span>) {
+            <span class='prelude-val'>Ok</span>(<span class='ident'>d</span>) <span class='op'>=&gt;</span> <span class='ident'>d</span>,
+            <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
+                <span class='macro'>error</span><span class='macro'>!</span>(<span class='string'>&quot;Block file {:?} couldn&#39;t be decompressed: {:?}&quot;</span>, <span class='ident'>path</span>, <span class='ident'>e</span>);
+                <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.read.corrupt&quot;</span>, <span class='number'>1</span>);
+                <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>e</span>);
+            }
+        };
+        <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.read&quot;</span>, <span class='number'>1</span>);
+
+        <span class='kw'>let</span> <span class='ident'>actual_hash</span> <span class='op'>=</span> <span class='ident'>blake2b</span>::<span class='ident'>blake2b</span>(<span class='ident'>BLAKE_HASH_SIZE_BYTES</span>, <span class='kw-2'>&amp;</span>[], <span class='kw-2'>&amp;</span><span class='ident'>decompressed</span>)
+            .<span class='ident'>as_bytes</span>().<span class='ident'>to_hex</span>();
+        <span class='kw'>if</span> <span class='ident'>actual_hash</span> <span class='op'>!=</span> <span class='op'>*</span><span class='ident'>hash</span> {
+            <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.read.misplaced&quot;</span>, <span class='number'>1</span>);
+            <span class='macro'>error</span><span class='macro'>!</span>(<span class='string'>&quot;Block file {:?} has actual decompressed hash {:?}&quot;</span>,
+                <span class='ident'>path</span>, <span class='ident'>actual_hash</span>);
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidData</span>, <span class='string'>&quot;block.read.misplaced&quot;</span>));
+        }
+        <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>decompressed</span>);
+    }
+}
+
+<span class='kw'>fn</span> <span class='ident'>read_and_decompress</span>(<span class='ident'>path</span>: <span class='kw-2'>&amp;</span><span class='ident'>Path</span>) <span class='op'>-&gt;</span> <span class='ident'>io</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;&gt;</span> {
+    <span class='kw'>let</span> <span class='ident'>f</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>fs</span>::<span class='ident'>File</span>::<span class='ident'>open</span>(<span class='kw-2'>&amp;</span><span class='ident'>path</span>));
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>decoder</span> <span class='op'>=</span> <span class='ident'>brotli2</span>::<span class='ident'>read</span>::<span class='ident'>BrotliDecoder</span>::<span class='ident'>new</span>(<span class='ident'>f</span>);
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>decompressed</span> <span class='op'>=</span> <span class='ident'>Vec</span>::<span class='op'>&lt;</span><span class='ident'>u8</span><span class='op'>&gt;</span>::<span class='ident'>new</span>();
+    <span class='macro'>try</span><span class='macro'>!</span>(<span class='ident'>decoder</span>.<span class='ident'>read_to_end</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>decompressed</span>));
+    <span class='prelude-val'>Ok</span>(<span class='ident'>decompressed</span>)
 }
 
 
@@ -415,7 +505,9 @@
     <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fs</span>;
     <span class='kw'>use</span> <span class='ident'>tempdir</span>;
     <span class='kw'>use</span> <span class='ident'>super</span>::{<span class='ident'>BlockDir</span>, <span class='ident'>BlockWriter</span>};
+    <span class='kw'>use</span> <span class='ident'>super</span>::<span class='ident'>super</span>::<span class='ident'>report</span>::<span class='ident'>SyncReport</span>;
 
+    <span class='kw'>const</span> <span class='ident'>EXAMPLE_TEXT</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> <span class='ident'>str</span> <span class='op'>=</span> <span class='string'>&quot;hello!&quot;</span>;
     <span class='kw'>const</span> <span class='ident'>EXAMPLE_BLOCK_HASH</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;static</span> <span class='ident'>str</span> <span class='op'>=</span>
         <span class='string'>&quot;66ad1939a9289aa9f1f1d9ad7bcee694293c7623affb5979bd3f844ab4adcf21\
          45b117b7811b3cee31e130efd760e9685f208c2b2fb1d67e28262168013ba63c&quot;</span>;
@@ -429,14 +521,12 @@
         <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Compressed result: {:?}&quot;</span>, <span class='ident'>compressed</span>);
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>compressed</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='number'>10</span>);
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>hash_hex</span>.<span class='ident'>len</span>() <span class='op'>==</span> <span class='number'>128</span>);
-        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hash_hex</span>,
-            <span class='string'>&quot;66ad1939a9289aa9f1f1d9ad7bcee694293c7623affb5979bd3f844ab4adcf21\
-             45b117b7811b3cee31e130efd760e9685f208c2b2fb1d67e28262168013ba63c&quot;</span>);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hash_hex</span>, <span class='ident'>EXAMPLE_BLOCK_HASH</span>);
     }
 
-    <span class='kw'>fn</span> <span class='ident'>setup</span>() <span class='op'>-&gt;</span> (<span class='ident'>tempdir</span>::<span class='ident'>TempDir</span>, <span class='ident'>BlockDir</span>) {
+    <span class='kw'>fn</span> <span class='ident'>setup</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>(<span class='ident'>report</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>SyncReport</span>) <span class='op'>-&gt;</span> (<span class='ident'>tempdir</span>::<span class='ident'>TempDir</span>, <span class='ident'>BlockDir</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span>) {
         <span class='kw'>let</span> <span class='ident'>testdir</span> <span class='op'>=</span> <span class='ident'>tempdir</span>::<span class='ident'>TempDir</span>::<span class='ident'>new</span>(<span class='string'>&quot;block_test&quot;</span>).<span class='ident'>unwrap</span>();
-        <span class='kw'>let</span> <span class='ident'>block_dir</span> <span class='op'>=</span> <span class='ident'>BlockDir</span>::<span class='ident'>new</span>(<span class='ident'>testdir</span>.<span class='ident'>path</span>());
+        <span class='kw'>let</span> <span class='ident'>block_dir</span> <span class='op'>=</span> <span class='ident'>BlockDir</span>::<span class='ident'>new</span>(<span class='ident'>testdir</span>.<span class='ident'>path</span>(), <span class='ident'>report</span>);
         <span class='kw'>return</span> (<span class='ident'>testdir</span>, <span class='ident'>block_dir</span>);
     }
 
@@ -444,12 +534,13 @@
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>test_write_to_file</span>() {
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>writer</span> <span class='op'>=</span> <span class='ident'>BlockWriter</span>::<span class='ident'>new</span>();
         <span class='kw'>let</span> <span class='ident'>expected_hash</span> <span class='op'>=</span> <span class='ident'>EXAMPLE_BLOCK_HASH</span>.<span class='ident'>to_string</span>();
-        <span class='kw'>let</span> (<span class='ident'>testdir</span>, <span class='ident'>block_dir</span>) <span class='op'>=</span> <span class='ident'>setup</span>();
+        <span class='kw'>let</span> <span class='ident'>report</span> <span class='op'>=</span> <span class='ident'>SyncReport</span>::<span class='ident'>new</span>();
+        <span class='kw'>let</span> (<span class='ident'>testdir</span>, <span class='ident'>block_dir</span>) <span class='op'>=</span> <span class='ident'>setup</span>(<span class='kw-2'>&amp;</span><span class='ident'>report</span>);
 
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>block_dir</span>.<span class='ident'>contains</span>(<span class='kw-2'>&amp;</span><span class='ident'>expected_hash</span>).<span class='ident'>unwrap</span>(),
             <span class='boolval'>false</span>);
 
-        <span class='ident'>writer</span>.<span class='ident'>write_all</span>(<span class='string'>&quot;hello!&quot;</span>.<span class='ident'>as_bytes</span>()).<span class='ident'>unwrap</span>();
+        <span class='ident'>writer</span>.<span class='ident'>write_all</span>(<span class='ident'>EXAMPLE_TEXT</span>.<span class='ident'>as_bytes</span>()).<span class='ident'>unwrap</span>();
         <span class='kw'>let</span> <span class='ident'>hash_hex</span> <span class='op'>=</span> <span class='ident'>block_dir</span>.<span class='ident'>store</span>(<span class='ident'>writer</span>).<span class='ident'>unwrap</span>();
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hash_hex</span>, <span class='ident'>EXAMPLE_BLOCK_HASH</span>);
 
@@ -458,26 +549,37 @@
         <span class='kw'>let</span> <span class='ident'>attr</span> <span class='op'>=</span> <span class='ident'>fs</span>::<span class='ident'>metadata</span>(<span class='ident'>expected_file</span>).<span class='ident'>unwrap</span>();
         <span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>attr</span>.<span class='ident'>is_file</span>());
 
-        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>block_dir</span>.<span class='ident'>contains</span>(<span class='kw-2'>&amp;</span><span class='ident'>expected_hash</span>).<span class='ident'>unwrap</span>(),
-            <span class='boolval'>true</span>);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>block_dir</span>.<span class='ident'>contains</span>(<span class='kw-2'>&amp;</span><span class='ident'>expected_hash</span>).<span class='ident'>unwrap</span>(), <span class='boolval'>true</span>);
+
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.already_present&quot;</span>), <span class='number'>0</span>);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.count&quot;</span>), <span class='number'>1</span>);
+
+        <span class='comment'>// Try to read back</span>
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.read&quot;</span>), <span class='number'>0</span>);
+        <span class='kw'>let</span> <span class='ident'>back</span> <span class='op'>=</span> <span class='ident'>block_dir</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='ident'>expected_hash</span>).<span class='ident'>unwrap</span>();
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>back</span>, <span class='ident'>EXAMPLE_TEXT</span>.<span class='ident'>as_bytes</span>());
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.read&quot;</span>), <span class='number'>1</span>);
     }
 
     <span class='attribute'>#[<span class='ident'>test</span>]</span>
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>test_write_same_data_again</span>() {
-        <span class='kw'>let</span> (<span class='ident'>testdir</span>, <span class='ident'>block_dir</span>) <span class='op'>=</span> <span class='ident'>setup</span>();
+        <span class='kw'>let</span> <span class='ident'>report</span> <span class='op'>=</span> <span class='ident'>SyncReport</span>::<span class='ident'>new</span>();
+        <span class='kw'>let</span> (<span class='ident'>_testdir</span>, <span class='ident'>block_dir</span>) <span class='op'>=</span> <span class='ident'>setup</span>(<span class='kw-2'>&amp;</span><span class='ident'>report</span>);
 
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>writer</span> <span class='op'>=</span> <span class='ident'>BlockWriter</span>::<span class='ident'>new</span>();
         <span class='ident'>writer</span>.<span class='ident'>write_all</span>(<span class='string'>&quot;hello!&quot;</span>.<span class='ident'>as_bytes</span>()).<span class='ident'>unwrap</span>();
         <span class='kw'>let</span> <span class='ident'>hash1</span> <span class='op'>=</span> <span class='ident'>block_dir</span>.<span class='ident'>store</span>(<span class='ident'>writer</span>).<span class='ident'>unwrap</span>();
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.already_present&quot;</span>), <span class='number'>0</span>);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.count&quot;</span>), <span class='number'>1</span>);
 
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>writer</span> <span class='op'>=</span> <span class='ident'>BlockWriter</span>::<span class='ident'>new</span>();
         <span class='ident'>writer</span>.<span class='ident'>write_all</span>(<span class='string'>&quot;hello!&quot;</span>.<span class='ident'>as_bytes</span>()).<span class='ident'>unwrap</span>();
         <span class='kw'>let</span> <span class='ident'>hash2</span> <span class='op'>=</span> <span class='ident'>block_dir</span>.<span class='ident'>store</span>(<span class='ident'>writer</span>).<span class='ident'>unwrap</span>();
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.already_present&quot;</span>), <span class='number'>1</span>);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.count&quot;</span>), <span class='number'>1</span>);
 
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>hash1</span>, <span class='ident'>hash2</span>);
     }
-
-    <span class='comment'>// TODO: Try reading data back.</span>
 }
 </pre>
 </section>
