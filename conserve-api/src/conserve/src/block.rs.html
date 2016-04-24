@@ -311,6 +311,8 @@
 <span id="267">267</span>
 <span id="268">268</span>
 <span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
 </pre><pre class='rust '>
 <span class='comment'>// Conserve backup system.</span>
 <span class='comment'>// Copyright 2015, 2016 Martin Pool.</span>
@@ -454,6 +456,7 @@
             }
         }
         <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.write.count&quot;</span>, <span class='number'>1</span>);
+        <span class='self'>self</span>.<span class='ident'>report</span>.<span class='ident'>increment</span>(<span class='string'>&quot;block.write.compressed_bytes&quot;</span>, <span class='ident'>compressed_bytes</span>.<span class='ident'>len</span>() <span class='kw'>as</span> <span class='ident'>u64</span>);
         <span class='prelude-val'>Ok</span>(<span class='ident'>hex_hash</span>)
     }
 
@@ -553,6 +556,7 @@
 
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.already_present&quot;</span>), <span class='number'>0</span>);
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.count&quot;</span>), <span class='number'>1</span>);
+        <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.write.compressed_bytes&quot;</span>), <span class='number'>10</span>);
 
         <span class='comment'>// Try to read back</span>
         <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>report</span>.<span class='ident'>get_count</span>(<span class='string'>&quot;block.read&quot;</span>), <span class='number'>0</span>);
