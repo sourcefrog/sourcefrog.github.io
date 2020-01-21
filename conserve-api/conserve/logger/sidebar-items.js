@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["establish_a_logger",""]],"struct":[["ConsoleLogger","Log with colors to a terminal: only works if a real terminal is available."],["TextLogger","Log in plain text to stdout."]]});
